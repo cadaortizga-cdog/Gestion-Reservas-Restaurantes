@@ -47,4 +47,18 @@ public class ClientServiceImpl implements ClientService {
     public void delete(Long id) {
         clientRepository.deleteById(id);
     }
+
+    @Override
+    public void addPoints(Long clientId, int pointsToAdd) {
+        Client c = clientRepository.findById(clientId)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+        int newPoints = (c.getPoints() == null ? 0 : c.getPoints()) + pointsToAdd;
+        c.setPoints(newPoints);
+
+        if (newPoints >= 100) c.setLoyaltyLevel("Oro");
+        else if (newPoints >= 50) c.setLoyaltyLevel("Plata");
+        else c.setLoyaltyLevel("Bronce");
+
+        clientRepository.save(c);
+    }
 }

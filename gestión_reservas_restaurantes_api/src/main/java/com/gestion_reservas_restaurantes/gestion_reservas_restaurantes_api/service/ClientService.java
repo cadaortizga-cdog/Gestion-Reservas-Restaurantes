@@ -15,4 +15,6 @@ public interface ClientService {
     List<Client> getAll();
 
     void delete(Long id);
+
+    void addPoints(Long clientId, int pointsToAdd);
 }

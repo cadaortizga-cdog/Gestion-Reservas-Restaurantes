@@ -14,4 +14,6 @@ public interface VipWaitlistService {
     VipWaitlist getById(Long id);
 
     void delete(Long id);
+
+    Long countByDateTime(java.time.LocalDateTime dateTime);
 }

@@ -50,4 +50,9 @@ public class VipWaitlistServiceImpl implements VipWaitlistService {
 
         return repository.save(existing);
     }
+
+    @Override
+    public Long countByDateTime(java.time.LocalDateTime dateTime) {
+        return repository.countByDateTime(dateTime);
+    }
 }
