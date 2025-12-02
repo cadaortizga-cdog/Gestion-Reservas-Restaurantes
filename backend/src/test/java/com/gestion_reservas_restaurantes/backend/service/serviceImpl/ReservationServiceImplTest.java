@@ -141,21 +141,30 @@ class ReservationServiceImplTest {
         Mockito.when(restaurantTableRepository.count()).thenReturn(10L);
         Mockito.when(vipWaitlistRepository.countByDateTime(ArgumentMatchers.any())).thenReturn(0L);
 
+        Reservation conflict = new Reservation();
+        conflict.setStatus("pendiente");
         Mockito.when(reservationRepository.findConflicts(
                 ArgumentMatchers.anyLong(),
                 ArgumentMatchers.any(),
                 ArgumentMatchers.any()
-        )).thenReturn(List.of(new Reservation()));
+        )).thenReturn(List.of(conflict));
 
         Reservation r = new Reservation();
         r.setTable(table);
         r.setClient(vipClient);
-        r.setDateTime(LocalDateTime.now().plusHours(2));
-        r.setEndTime(r.getDateTime().plusHours(1));
+
+        LocalDateTime start = LocalDateTime.now()
+                .withHour(14)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0)
+                .plusDays(1);
+        r.setDateTime(start);
+        r.setEndTime(start.plusHours(1));
         r.setNumPeople(2);
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> service.createReservation(r));
-        assertTrue(ex.getMessage().contains("agregado a la lista de espera"));
+        assertEquals("No hay mesas disponibles: cliente VIP agregado a la lista de espera", ex.getMessage());
 
         Mockito.verify(vipWaitlistRepository).save(ArgumentMatchers.any());
     }
