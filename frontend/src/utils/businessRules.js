@@ -1,4 +1,3 @@
-// src/utils/businessRules.js
 export const RESERVATION_MIN_DURATION = 60; 
 export const CONFIRMATION_DEADLINE = 30; 
 export const WAITLIST_PERCENTAGE = 0.20;
