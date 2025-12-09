@@ -84,26 +84,62 @@ export const ReservationsView = ({ reservations, tables, clients, schedule, load
   const handleCreate = async () => {
     setError('');
     setSuccess('');
-    const numPeople = parseInt(formData.numPeople);
-    if (!formData.clientId || !formData.tableId || !formData.dateTime || !formData.endTime || !numPeople) {
+
+    if (!formData.clientId || !formData.tableId || !formData.dateTime || !formData.endTime || !formData.numPeople) {
       setError('Todos los campos son obligatorios.');
       return;
     }
+
+    const numPeople = parseInt(formData.numPeople, 10);
+    const start = new Date(formData.dateTime);
+    const end = new Date(formData.endTime);
+    const now = new Date();
+
+    if (start <= now) {
+      setError('La fecha y hora de inicio debe ser futura.');
+      return;
+    }
+
+    if (end <= start) {
+      setError('La fecha y hora de fin debe ser posterior a la de inicio.');
+      return;
+    }
+
+    const durationMinutes = (end - start) / (1000 * 60);
+    if (durationMinutes < 60) {
+      setError('La reserva debe durar al menos 1 hora.');
+      return;
+    }
+
+    const selectedTable = tables.find(t => t.id === parseInt(formData.tableId, 10));
+    if (selectedTable && numPeople > selectedTable.capacity) {
+      setError(`El número de personas (${numPeople}) excede la capacidad de la mesa #${selectedTable.numTable} (${selectedTable.capacity} personas).`);
+      return;
+    }
+
+    const selectedClient = clients.find(c => c.id === parseInt(formData.clientId, 10));
+    if (selectedTable && selectedTable.vipExclusive && selectedClient && !selectedClient.vip) {
+      setError(`La mesa #${selectedTable.numTable} es exclusiva para clientes VIP.`);
+      return;
+    }
+
     try {
       const body = JSON.stringify({
-        clientId: parseInt(formData.clientId),
-        tableId: parseInt(formData.tableId),
+        clientId: parseInt(formData.clientId, 10),
+        tableId: parseInt(formData.tableId, 10),
         dateTime: formData.dateTime,
         endTime: formData.endTime,
         numPeople,
         status: 'pendiente',
         specialRequests: formData.specialRequests || null
       });
+
       const res = await fetch(`${API_URL}/reservations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body
       });
+
       if (res.ok) {
         const reservation = await res.json();
         const client = clients.find(c => c.id === reservation.clientId);
@@ -116,7 +152,7 @@ export const ReservationsView = ({ reservations, tables, clients, schedule, load
         const text = await res.text();
         // Manejar caso de "no hay mesas → VIP → lista de espera"
         if (text.includes('lista de espera')) {
-          const client = clients.find(c => c.id === parseInt(formData.clientId));
+          const client = clients.find(c => c.id === parseInt(formData.clientId, 10));
           if (client?.vip) {
             if (window.confirm(`⚠️ No hay mesas disponibles.\n¿Agregar a lista de espera VIP?`)) {
               try {
@@ -124,7 +160,7 @@ export const ReservationsView = ({ reservations, tables, clients, schedule, load
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    clientId: parseInt(formData.clientId),
+                    clientId: parseInt(formData.clientId, 10),
                     dateTime: formData.dateTime,
                     numPeople,
                     listStatus: 'en_espera'

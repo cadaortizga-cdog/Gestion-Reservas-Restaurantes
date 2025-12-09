@@ -42,6 +42,11 @@ export const ScheduleView = ({ schedule, loadData, styles }) => {
       setError('La hora de cierre debe ser posterior a la apertura.');
       return;
     }
+      const existingForDay = schedule.find(s => s.dayOfWeek.toString() === dayOfWeek);
+      if (existingForDay && !editingSchedule) {
+        setError(`Ya existe un horario configurado para ${days[dayOfWeek]}.`);
+        return;
+      }
     try {
       const url = editingSchedule
         ? `${API_URL}/schedule/${editingSchedule.id}`

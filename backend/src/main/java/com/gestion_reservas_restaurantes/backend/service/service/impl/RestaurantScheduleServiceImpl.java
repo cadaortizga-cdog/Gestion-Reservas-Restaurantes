@@ -18,6 +18,11 @@ public class RestaurantScheduleServiceImpl implements RestaurantScheduleService 
 
     @Override
     public RestaurantSchedule create(RestaurantSchedule schedule) {
+        boolean exists = repository.findAll().stream()
+                .anyMatch(s -> s.getDayOfWeek().equals(schedule.getDayOfWeek()));
+        if (exists) {
+            throw new RuntimeException("Ya existe un horario para este día de la semana");
+        }
         return repository.save(schedule);
     }
 

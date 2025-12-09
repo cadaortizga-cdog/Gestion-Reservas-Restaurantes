@@ -1,13 +1,7 @@
 package com.gestion_reservas_restaurantes.backend.service.service.impl;
 
-import com.gestion_reservas_restaurantes.backend.model.Client;
-import com.gestion_reservas_restaurantes.backend.model.Reservation;
-import com.gestion_reservas_restaurantes.backend.model.RestaurantTable;
-import com.gestion_reservas_restaurantes.backend.model.VipWaitlist;
-import com.gestion_reservas_restaurantes.backend.repository.ClientRepository;
-import com.gestion_reservas_restaurantes.backend.repository.ReservationRepository;
-import com.gestion_reservas_restaurantes.backend.repository.RestaurantTableRepository;
-import com.gestion_reservas_restaurantes.backend.repository.VipWaitlistRepository;
+import com.gestion_reservas_restaurantes.backend.model.*;
+import com.gestion_reservas_restaurantes.backend.repository.*;
 import com.gestion_reservas_restaurantes.backend.service.ReservationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +10,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,15 +20,18 @@ public class ReservationServiceImpl implements ReservationService {
     private final RestaurantTableRepository restaurantTableRepository;
     private final VipWaitlistRepository vipWaitlistRepository;
     private final ClientRepository clientRepository;
+    private final RestaurantScheduleRepository scheduleRepository;
 
     public ReservationServiceImpl(ReservationRepository reservationRepository,
                                   RestaurantTableRepository restaurantTableRepository,
                                   VipWaitlistRepository vipWaitlistRepository,
-                                  ClientRepository clientRepository) {
+                                  ClientRepository clientRepository,
+                                  RestaurantScheduleRepository scheduleRepository) {
         this.reservationRepository = reservationRepository;
         this.restaurantTableRepository = restaurantTableRepository;
         this.vipWaitlistRepository = vipWaitlistRepository;
         this.clientRepository = clientRepository;
+        this.scheduleRepository = scheduleRepository;
     }
 
     private String levelByPoints(Integer points) {
@@ -88,14 +86,26 @@ public class ReservationServiceImpl implements ReservationService {
             throw new RuntimeException("La reserva debe durar mínimo 1 hora");
         }
 
-        LocalTime startTime = reservation.getDateTime().toLocalTime();
-        LocalTime endTime = reservation.getEndTime().toLocalTime();
+        int dayOfWeek = reservation.getDateTime().getDayOfWeek().getValue(); // 1=Lun, 7=Dom
+
         LocalTime open = LocalTime.of(10, 0);
         LocalTime close = LocalTime.of(22, 0);
 
-        if (startTime.isBefore(open) || !startTime.isBefore(close) ||
-                endTime.isAfter(close) || !endTime.isAfter(open)) {
-            throw new RuntimeException("Las reservas solo están permitidas entre 10:00 y 22:00");
+        Optional<RestaurantSchedule> scheduleOpt = scheduleRepository.findAll().stream()
+                .filter(s -> s.getDayOfWeek() == dayOfWeek)
+                .findFirst();
+
+        if (scheduleOpt.isPresent()) {
+            open = scheduleOpt.get().getOpenTime();
+            close = scheduleOpt.get().getCloseTime();
+        }
+
+        LocalTime startTime = reservation.getDateTime().toLocalTime();
+        LocalTime endTime = reservation.getEndTime().toLocalTime();
+
+        if (startTime.isBefore(open) || startTime.isAfter(close) ||
+                endTime.isBefore(open) || endTime.isAfter(close)) {
+            throw new RuntimeException("Las reservas solo están permitidas entre " + open + " y " + close);
         }
 
         RestaurantTable table;
