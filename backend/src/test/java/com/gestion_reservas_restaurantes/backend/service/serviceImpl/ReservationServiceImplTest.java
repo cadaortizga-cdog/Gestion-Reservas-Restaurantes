@@ -3,10 +3,7 @@ package com.gestion_reservas_restaurantes.backend.service.serviceImpl;
 import com.gestion_reservas_restaurantes.backend.model.Client;
 import com.gestion_reservas_restaurantes.backend.model.Reservation;
 import com.gestion_reservas_restaurantes.backend.model.RestaurantTable;
-import com.gestion_reservas_restaurantes.backend.repository.ReservationRepository;
-import com.gestion_reservas_restaurantes.backend.repository.RestaurantTableRepository;
-import com.gestion_reservas_restaurantes.backend.repository.VipWaitlistRepository;
-import com.gestion_reservas_restaurantes.backend.repository.ClientRepository;
+import com.gestion_reservas_restaurantes.backend.repository.*;
 import com.gestion_reservas_restaurantes.backend.service.service.impl.ReservationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +24,7 @@ class ReservationServiceImplTest {
     private VipWaitlistRepository vipWaitlistRepository;
     private ClientRepository clientRepository;
     private ReservationServiceImpl service;
+    private RestaurantScheduleRepository restaurantScheduleRepository;
 
     @BeforeEach
     void setup() {
@@ -34,12 +32,14 @@ class ReservationServiceImplTest {
         restaurantTableRepository = Mockito.mock(RestaurantTableRepository.class);
         vipWaitlistRepository = Mockito.mock(VipWaitlistRepository.class);
         clientRepository = Mockito.mock(ClientRepository.class);
+        restaurantScheduleRepository = Mockito.mock(RestaurantScheduleRepository.class);
 
         service = new ReservationServiceImpl(
                 reservationRepository,
                 restaurantTableRepository,
                 vipWaitlistRepository,
-                clientRepository
+                clientRepository,
+                restaurantScheduleRepository
         );
 
         Mockito.when(reservationRepository.findAll()).thenReturn(Collections.emptyList());
