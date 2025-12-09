@@ -86,7 +86,7 @@ public class ReservationServiceImpl implements ReservationService {
             throw new RuntimeException("La reserva debe durar mínimo 1 hora");
         }
 
-        int dayOfWeek = reservation.getDateTime().getDayOfWeek().getValue(); // 1=Lun, 7=Dom
+        int dayOfWeek = reservation.getDateTime().getDayOfWeek().getValue();
 
         LocalTime open = LocalTime.of(10, 0);
         LocalTime close = LocalTime.of(22, 0);

@@ -19,9 +19,22 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [config, setConfig] = useState({ minReservationDurationMinutes: 60 });
 
   useEffect(() => {
     loadData();
+     const loadConfig = async () => {
+      try {
+        const res = await fetch(`${API_URL}/reservations/config`);
+        if (res.ok) {
+          const cfg = await res.json();
+          setConfig(cfg);
+        }
+      } catch (err) {
+        console.error("Error cargando configuración:", err);
+      }
+    };
+    loadConfig();
   }, []);
 
   const loadData = async () => {

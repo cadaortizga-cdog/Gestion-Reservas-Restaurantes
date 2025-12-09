@@ -123,6 +123,22 @@ export const ReservationsView = ({ reservations, tables, clients, schedule, load
       return;
     }
 
+    const hasConflict = reservations.some(r => 
+    r.tableId === parseInt(formData.tableId, 10) &&
+    r.status !== 'cancelada' &&
+    r.status !== 'finalizada' &&
+    (
+      (start >= new Date(r.dateTime) && start < new Date(r.endTime)) ||
+      (end > new Date(r.dateTime) && end <= new Date(r.endTime)) ||
+      (new Date(r.dateTime) >= start && new Date(r.endTime) <= end)
+    )
+  );
+
+  if (hasConflict) {
+    setError('La mesa ya está reservada en ese horario.');
+    return;
+  } 
+
     try {
       const body = JSON.stringify({
         clientId: parseInt(formData.clientId, 10),
